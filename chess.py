@@ -15,13 +15,21 @@ def get_possible_moves_knight(position):
     ]
     return {f"{LETTERS[r]}{c + 1}" for r, c in moves if 0 <= r < 8 and 0 <= c < 8}
 
-def get_possible_moves_rook(position):
-    """Generate all possible moves for a rook from the given position."""
+def get_possible_moves_rook(position, black_positions):
+    """Generate all possible moves for a rook from the given position, stopping at the first black piece in each direction."""
     moves = set()
     row, col = LETTERS.index(position[0]), int(position[1]) - 1
-    # Add horizontal and vertical moves
-    moves.update(f"{LETTERS[row]}{n + 1}" for n in range(8) if n != col)
-    moves.update(f"{LETTERS[r]}{col + 1}" for r in range(8) if r != row)
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+    for dr, dc in directions:
+        r, c = row + dr, col + dc
+        while 0 <= r < 8 and 0 <= c < 8:
+            pos = f"{LETTERS[r]}{c + 1}"
+            moves.add(pos)
+            if pos in black_positions:
+                break
+            r += dr
+            c += dc
     return moves
 
 def get_white_piece():
@@ -42,10 +50,10 @@ def get_black_pieces():
     while True:
         black_input = input("Enter black piece and position (e.g., 'pawn d4') or 'done' to finish: ").strip().lower()
         if black_input == "done":
-            if len(black_pieces) >= 1:
+            if 1 <= len(black_pieces) <= 16:
                 break
             else:
-                print("You must enter at least one black piece before finishing.")
+                print("You must enter at least one black piece and up to 16.")
                 continue
 
         try:
@@ -64,12 +72,13 @@ def get_black_pieces():
 def main():
     white_piece, white_pos = get_white_piece()
     black_pieces = get_black_pieces()
+    black_positions = set(black_pieces.keys())
 
     # Determine captureable black pieces
     if white_piece == "knight":
         possible_moves = get_possible_moves_knight(white_pos)
     elif white_piece == "rook":
-        possible_moves = get_possible_moves_rook(white_pos)
+        possible_moves = get_possible_moves_rook(white_pos, black_positions)
 
     # List out which black pieces can be taken
     capturable = {pos: piece for pos, piece in black_pieces.items() if pos in possible_moves}
